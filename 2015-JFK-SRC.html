@@ -95,7 +95,7 @@
   function test(){
 	  $(function(){
 		  $.get("Flight 2015 JFK SRC.csv", function(d){
-			  r.length = 0;
+			  res.length = 0;
 			  var result = $.csv.toObjects(d);
 			  for (var i = 0; i < result.length; i++){
 			  	 var lat = result[i]["LAT"]*1.0;
