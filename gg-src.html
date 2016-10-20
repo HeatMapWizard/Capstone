@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ZIPCODE BY LAT-LONG</title>
+	<script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+	<script src="javascripts/jquery.csv.min.js"></script>
+
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+	  /* #function = id > class
+	  4 levels : inline style  > name(id) > class > element name(i.e. html,div, body etc..)  */
+      #floating-panel {
+        position: absolute;
+        top: 10px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+	  /* .function = class */
+      #floating-panel {
+        background-color: #000;
+        border: 1px solid #999;
+        left: 25%;
+        padding: 5px;
+        position: absolute;
+        top: 10px;
+        z-index: 5;
+      }
+    </style>
+  </head>
+
+  <body>
+	<!--
+	style="background: blue;" inline
+	<button onclick="changeGradient()">Change gradient</button>
+    <button onclick="changeOpacity()">Change opacity</button>
+	<button onclick="toggleHeatmap()">Toggle Heatmap</button>
+	-->
+    <div id="floating-panel">
+	  <button onclick="changeRadiusL()">Larger radius</button>
+	  <button onclick="changeRadiusM()">Medium radius</button>
+	  <button onclick="changeRadiusS()">Smaller radius</button>
+	  <select>
+	  	<option>69</option>
+	  </select>
+
+    </div>
+    <div id="map"></div>
+
+    <script>
+
+	//var arr = [ [asd]];
+
+      // This example requires the Visualization library. Include the libraries=visualization
+      // parameter when you first load the API. For example:
+      // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization">
+
+      var map, heatmap, res=[];
+
+      function initMap(r) {
+		  map = new google.maps.Map(document.getElementById('map'), { zoom: 4, center: {lat: 39.8282, lng: -98.5795}, mapTypeId: 'roadmap'});
+
+        heatmap = new google.maps.visualization.HeatmapLayer({data: r,map: map});
+
+		heatmap.set('radius', heatmap.get('radius') ? 50 : 50);
+
+      }
+
+      function changeRadiusL() {
+        heatmap.set('radius', heatmap.get('radius') ? 150 : 150);
+      }
+
+	  function changeRadiusM() {
+        heatmap.set('radius', heatmap.get('radius') ? 100 : 100);
+      }
+
+	  function changeRadiusS() {
+        heatmap.set('radius', heatmap.get('radius') ? 50 : 50);
+      }
+
+  function test(){
+	  $(function(){
+		  $.get("zipcode.csv", function(d){
+			  res.length = 0;
+			  var result = $.csv.toObjects(d);
+			  for (var i = 0; i < result.length; i++){
+			  	 var lat = result[i]["LAT"]*1.0;
+			 	 var long = result[i]["LNG"]*1.0;
+				 var wt = 1.0;
+				 res.push({location: new google.maps.LatLng(lat,long), weight: wt});
+			 }
+			 initMap(res);
+		  });
+	  });
+  }
+
+    </script>
+
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtpAb_QeWDYxt8wGyU90NWyb2hnst-src&libraries=visualization&callback=test">
+    </script>
+
+  </body>
+</html>
