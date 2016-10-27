@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Heat Map Wizz&auml;rd</title>
+<script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="javascripts/jquery.csv.min.js" type="text/javascript"></script>
+<style type="text/css">
+body, table, input, select, textarea, button	{font-family:sans-serif; font-size:100%;}
+body	{margin:0 auto; padding:0; border:0;}
+
+.l	{text-align:left;}
+.c	{text-align:center;}
+.r	{text-align:right;}
+.j	{text-align:justify;}
+
+/**** begin clearfix ****/
+.cf:before, .cf:after	{content: ' ';display: table;}
+.cf:after	{clear: both;}
+
+.cf>.fl	{float: left;}
+.cf>.fr	{float: right;}
+/**** end clearfix ****/
+
+#hdr	{background:#eef;}
+	#hdr h1	{background:#ddf; margin:0 auto; padding:1em 0;}
+
+#nav	{}
+	#nav ul	{margin:0 auto; padding:0; list-style:none; text-align:center;}
+	#nav li	{display:inline-block; margin:0 0.5em;}
+		#nav a	{display:block; padding:1em 0.5em;}
+
+#ftr	{background:#88e; color:#eff;}
+.draft #ftr	{background:#eff;}
+	#ftr .copy	{font-size:65%; text-align:center; margin:0 auto; padding:0;}
+	#ftr ul.copy	{list-style:none;}
+		#ftr .copy li	{display:inline-block;}
+
+.nav-personal	{}
+	.nav-personal ul	{margin:0 auto; padding:0; list-style:none; text-align:center;}
+	.nav-personal li	{display:block;}
+		.nav-personal a	{display:block; padding:1em;}
+.nav-actions	{}
+	.nav-actions ul	{margin:0 auto; padding:0; list-style:none; text-align:center;}
+	.nav-actions li	{display:block;}
+		.nav-actions a	{display:block; padding:1em;}
+
+#hdr-app	{}
+	#hdr-app h3	{text-align:center; margin:0 auto; padding:1em; font-size:100%;}
+#ftr-app	{min-height:200px; background:#88e; color:#eff;}
+.draft #ftr-app	{background:#eff;}
+	#ftr-app h3	{display:none;}
+	#ftr-app .nav-actions li	{display:inline-block; margin:0 0.5em;}
+	#ftr-app .nav-actions a	{padding:1em 0.5em;}
+
+/**** nav::actions ****/
+.nav-actions	{}
+	.nav-actions ul	{}
+	.nav-actions li	{}
+	.nav-actions a	{color:#222;}
+		.nav-actions a:hover	{background:#ccc;}
+	.nav-actions .fa-stack .fa-plus-circle	{color:#28c;}
+
+/**** fancy lists ****/
+.list-wr	{margin:0 1em;}
+.list	{margin:0 auto; list-style:none; padding:0;}
+.list>li	{display:block;}
+.list-title	{font-weight:bold; background:#eef; padding:1em; margin:0 auto;}
+.list .list-search	{}
+.list .list-search input	{}
+.list li+li+.list-none	{display:none;}
+
+/**** forms ****/
+form	{position:relative; box-sizing:border-box; position:relative; border:solid #ddd; border-width:1px 1px 0; margin:0 1em;}
+	form button	{position:relative; display:inline-block; box-sizing:border-box; line-height:1; padding:1em; border:0; background:#ddd; color:#222;}
+		form .btn-sub	{background:#4f8; color:#fff; cursor:pointer;}
+		form .btn-sub:hover	{background:#2c4; color:#fff;}
+	form label	{position:relative; display:block; box-sizing:border-box; /*padding:1em 0;*/ clear:both; line-height:1;}
+		form label.selective	{display:none;}
+		form label.selective.active	{display:block;}
+		form label[for]	{/*border:solid #ddd; border-width:0 0 1px;*/}
+			form label[for]:before	{content:' '; display:inline-block; width:0; height:0; overflow:hidden; border-style:solid; border-color:#ccc transparent transparent; border-width:16px 12px 0; position:absolute; right:8px; top:18px; z-index:0;}
+			form label[for]:focus:before, form label[for]:active:before	{border-top-color:#88c;}
+		form label.w50	{width:50%; float:left; clear:right;}
+		form label.w25	{width:25%; float:left; clear:right;}
+		form label.w50+label.w50 input[type="text"], form label.w50+label.w50 input[type="password"], form label.w50+label.w50 input[type="number"], form label.w50+label.w50 input[type="time"], form label.w50+label.w50 input[type="date"], form label.w50+label.w50 input[type="tel"], form label.w50+label.w50 input[type="email"]	{border-left-width:1px;}
+		form label+label.w25 input[type="text"], form label+label.w25 input[type="password"], form label+label.w25 input[type="number"], form label+label.w25 input[type="time"], form label+label.w25 input[type="date"], form label+label.w25 input[type="tel"], form label+label.w25 input[type="email"]	{border-left-width:1px;}
+		form label.w50+label.w50 select	{border-left-width:1px;}
+		form label+label.w25 select	{border-left-width:1px;}
+		form label input, form label select, form label button, form label textarea	{box-sizing:border-box; margin:0 auto; padding:0; position:relative;}
+			form label *:required+span:after	{content:"*"; position:absolute; color:#e22;}
+		form label textarea	{border:solid #ddd; border-width:0 0 1px; background:none; padding:1em 8px 1em; width:100%; color:#444; -webkit-appearance:none; appearance:none; border-radius:0;}
+		form label select	{border:solid #ddd; border-width:0 0 1px; background:none; padding:1em 8px 1em; width:100%; color:#444; -webkit-appearance:none; appearance:none; border-radius:0; position:relative; z-index:2;}
+		form label input[type="text"], form label input[type="password"], form label input[type="number"], form label input[type="time"], form label input[type="date"], form label input[type="tel"], form label input[type="email"]	{border:solid #ddd; border-width:0 0 1px; padding:1em 8px; display:block; width:100%; color:#444;}
+		form label input[type="search"]	{border:solid #ddd; border-width:0 0 1px; padding:1em 0px; display:block; width:100%; color:#444; -webkit-appearance:textfield; appearance:textfield; background:url("../img/mag.svg") right center no-repeat; background-size:auto 75%;}
+		form label span	{font-size:100%; color:#444; transition:0.35s font-size; display:block; box-sizing:border-box;}
+			form label input[type="checkbox"]	{position:absolute; top:16px; left:16px; opacity:0;}
+				form label input[type="checkbox"]+span	{border:solid #ddd; border-width:0 0 1px; padding:1em 16px 1em 48px; width:100%;}
+				form label input[type="checkbox"]+span:before	{display:block; text-align:center; box-sizing:border-box; content:" "; line-height:1; position:absolute; top:8px; left:8px; width:32px; height:32px; font-size:200%; border:1px solid #ddd;}
+				form label input[type="checkbox"]:checked+span	{/*background:#dfd;*/}
+				form label input[type="checkbox"]:checked+span:before	{content:"\2714"; border-color:#8c8; background:#dfd; /*line-height:3; border-width:0; top:0;*/}
+			form label input[type="text"]+span, form label input[type="password"]+span, form label input[type="number"]+span, form label input[type="time"]+span, form label input[type="date"]+span, form label input[type="tel"]+span, form label input[type="email"]+span	{position:absolute; top:0px; left:0px; padding:4px 8px; font-size:90%;}
+			form label input[type="search"]+span	{position:absolute; top:0px; left:0px; padding:4px 8px; font-size:90%;}
+			form label textarea+span	{transition:0.35s font-size; position:absolute; top:0px; left:0px; padding:4px 8px; font-size:90%; background:#fff;}
+			form label textarea+span	{
+				background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%); /* FF3.6+ */
+				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(50%,rgba(255,255,255,1)), color-stop(100%,rgba(255,255,255,0))); /* Chrome,Safari4+ */
+				background: -webkit-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(255,255,255,1) 50%,rgba(255,255,255,0) 100%); /* Chrome10+,Safari5.1+ */
+				background: -o-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(255,255,255,1) 50%,rgba(255,255,255,0) 100%); /* Opera 11.10+ */
+				background: -ms-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(255,255,255,1) 50%,rgba(255,255,255,0) 100%); /* IE10+ */
+				background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(255,255,255,1) 50%,rgba(255,255,255,0) 100%); /* W3C */
+			}
+			form label select+span	{transition:0.35s font-size; position:absolute; top:0px; left:0px; padding:4px 8px; font-size:90%;}
+			/*form label input[placeholder]:after	{position:absolute; top:0; left:16px; display:block; content:attr(placeholder); color:#444;}*/
+			form label input:active, form label input:focus	{outline:none; border-color:#88c; color:#88c;}
+			form label input[type="text"]:valid+span, form label input[type="password"]:valid+span, form label input[type="number"]:valid+span, form label input[type="time"]:valid+span	{font-size:65%;}
+			form label input[type="text"]:active+span, form label input[type="text"]:focus+span	{font-size:65%; color:#88c;}
+			form label input[type="password"]:active+span, form label input[type="password"]:focus+span	{font-size:65%; color:#88c;}
+			form label input[type="number"]:active+span, form label input[type="number"]:focus+span	{font-size:65%; color:#88c;}
+			form label input[type="time"]:active+span, form label input[type="time"]:focus+span	{font-size:65%; color:#88c;}
+			form label input[type="date"]:active+span, form label input[type="date"]:focus+span	{font-size:65%; color:#88c;}
+			form label input[type="tel"]:active+span, form label input[type="tel"]:focus+span	{font-size:65%; color:#88c;}
+			form label input[type="email"]:active+span, form label input[type="email"]:focus+span	{font-size:65%; color:#88c;}
+			form label input[type="search"]:valid+span	{font-size:65%;}
+			form label input[type="search"]:active+span, form label input[type="search"]:focus+span	{font-size:65%; color:#88c;}
+			form label textarea:active, form label textarea:focus	{outline:none; border-color:#88c; color:#88c;}
+			form label textarea:active+span, form label textarea:focus+span	{font-size:65%; color:#88c;}
+			form label select:active, form label select:focus	{outline:none; border-color:#88c; color:#88c;}
+			form label select:active+span, form label select:focus+span	{font-size:65%; color:#88c;}
+
+/**** aux ****/
+#modal	{
+	position:fixed; top:0; bottom:0; left:0; right:0; z-index:999;
+	display:none; background:rgba(255,255,255,0.75); text-align:center;
+}
+#modal.active	{display:block;}
+	#modal:after, #modal>div	{display:inline-block; vertical-align:middle;}
+	#modal:after	{content:' '; height:100%; width:1px; overflow:hidden; margin-left:-1px;}
+	#modal>div	{
+		/*position:absolute; top:0; bottom:0; left:0; right:0;
+		margin:auto; width:50%; height:50%;
+		min-height:50%;*/
+		box-sizing:border-box; border:1px solid #ddd; background:#fff;
+		text-align:left;
+	}
+	#modal button	{position:relative; display:inline-block; box-sizing:border-box; line-height:1; padding:1em; border:0; background:#ddd; color:#222;}
+		#modal button:hover	{background:#444; color:#fff;}
+	#modal #modal-hdr	{font-weight:bold; background:#eef; padding:1em; margin:0 auto;}
+		#modal #modal-hdr h3	{margin:0 auto; position:relative;}
+	#modal #modal-ftr	{/*position:absolute; bottom:0; left:0; right:0;*/ border-top:1px solid #eee; text-align:right;}
+	#modal #modal-msg	{margin:20px;}
+
+
+/**** dashboard ****/
+#dashboard-nav	{}
+	#dashboard-nav ul	{margin:0 auto; padding:0; list-style:none; text-align:center;}
+	#dashboard-nav li	{display:inline-block; margin:4px 8px;}
+	#dashboard-nav a	{
+		display:block; box-sizing:border-box; padding:8px 0; vertical-align:middle;
+		text-decoration:none; width:96px; height:96px;
+		background:#444; color:#888; text-shadow:0 1px 0 rgba(0,0,0,0.25), 0 -1px 0 rgba(255,255,255,0.25);
+		box-shadow:0 1px 4px rgba(0,0,0,0.25);
+	}
+		#dashboard-nav a:hover	{background:#999; color:#eee;}
+		#dashboard-nav a span	{display:block; margin:0 8px;}
+		#dash-users a	{background:#292; color:#8c8;}
+			#dash-users a:hover	{background:#9e9; color:#efe;}
+		#dash-clients a	{background:#229; color:#88c;}
+			#dash-clients a:hover	{background:#99e; color:#eef;}
+		#dash-proj a	{background:#942; color:#c82;}
+			#dash-proj a:hover	{background:#e92; color:#fea;}
+		#dash-tasks a	{background:#922; color:#c88;}
+			#dash-tasks a:hover	{background:#e99; color:#fee;}
+	#dashboard-nav .fa	{display:block;}
+
+
+/**** db::all ****/
+.list-wr .item	{box-sizing:border-box; margin:0 auto;}
+	.list-wr .item ul	{margin:0 auto; padding:0; list-style:none;}
+		.list-wr .item ul li	{display:block; margin:1em auto; padding:0 8px;}
+.item h3	{margin:0 auto; position:relative;}
+	.item h3 a	{display:block; background:right center no-repeat; background-size:24px 24px; padding:8px;}
+	.item h3 a[href^="#/view/"]:hover	{background-image:url("../img/eye.svg");}
+	.item h3 a[href^="#/edit/"]	{background-image:url("../img/pencil.svg"); background-position:center -24px; width:12px; text-indent:-999em; position:absolute; right:0;}
+		.item h3.cf a[href^="#/edit/"]	{float:right;}
+		.item h3:hover a[href^="#/edit/"]	{background-position:center center;}
+
+/**** db::users ****/
+.user	{}
+	.user-list .user	{border:solid #dfd; border-width:0 0 1px;}
+	.user-list .user ul	{}
+		.user-list .user ul li	{}
+.user h3	{}
+	.user h3 a	{background-color:#efe;}
+	.user h3 a[href^="#/view/"]:hover	{}
+	.user h3 a[href^="#/edit/"]	{}
+
+/**** db::clients ****/
+.client	{}
+	.client-list .client	{border:solid #dfd; border-width:0 0 1px;}
+	.client-list .client ul	{}
+		.client-list .client ul li	{}
+.client h3	{}
+	.client h3 a	{background-color:#efe;}
+	.client h3 a[href^="#/view/"]:hover	{}
+	.client h3 a[href^="#/edit/"]	{}
+
+/**** db::projects ****/
+.proj	{}
+	.project-list .proj	{border:solid #dfd; border-width:0 0 1px;}
+	.project-list .proj ul	{}
+		.project-list .proj ul li	{}
+.proj h3	{}
+	.proj h3 a	{background-color:#efe;}
+	.user h3 a[href^="#/view/"]:hover	{}
+	.proj h3 a[href^="#/edit/"]	{}
+
+/**** db::tasks ****/
+.task	{}
+	.task-list .task	{border:solid #dfd; border-width:0 0 1px;}
+	.task-list .task ul	{}
+		.task-list .task ul li	{}
+.task h3	{}
+	.task h3 a	{background-color:#efe;}
+	.task h3 a[href^="#/view/"]:hover	{}
+	.task h3 a[href^="#/edit/"]	{}
+
+
+
+/**** SCALE IT UP ****/
+@media screen and (min-width: 320px) {
+}
+@media screen and (min-width: 400px) {
+}
+@media screen and (min-width: 480px) {
+}
+@media screen and (min-width: 640px) {
+	#hdr-app	{}
+		#hdr-app .nav-actions li	{display:inline-block; margin:0 0.5em;}
+		##hdr-app .nav-actions a	{padding:1em 0.5em;}
+}
+
+@media screen and (min-width: 960px) {
+}
+
+@media screen and (min-width: 1024px) {
+}
+</style>
+</head>
+<body>
+<header id="hdr">
+	<h1 class="c">Heat Map Wizz&auml;rd</h1>
+	<nav id="nav"><ul>
+		<li><a href="https://github.com/HeatMapWizard/Capstone">Repo</a></li>
+	</ul></nav>
+</header>
+<main id="main">
+	<form id="wiz">
+		<label><select id="col-label" required="required"><optgroup label="Select column"></optgroup></select><span>Label column</span></label>
+		<label><select id="col-lat" required="required"><optgroup label="Select column"></optgroup></select><span>Latitude column</span></label>
+		<label><select id="col-lng" required="required"><optgroup label="Select column"></optgroup></select><span>Longitude column</span></label>
+		<label><select id="col-wt" required="required"><optgroup label="Select column"></optgroup></select><span>Weight column</span></label>
+		<label><input type="checkbox" id="use-lbl" /><span>I have labeled columns</span></label>
+		<label><select id="center" required="required"><optgroup label="Select location"></optgroup></select><span>Center map at&hellip;</span></label>
+		<button type="submit" id="upd-map" class="btn btn-primary btn-sub">Update!</button>
+	</form>
+	<div id="wiz-map"></div>
+</main>
+<footer id="ftr"></footer>
+<script type="text/javascript">/* <![CDATA[ */
+var centers = {
+	"ny-cp":{"label":"Central Park","lat":40.7828647,"lng":-73.9675438},
+	"ny-ts":{"label":"Times Square","lat":40.758895,"lng":-73.9873197},
+	"us-dc":{"label":"Washington, DC","lat":38.899265,"lng":-77.154656}
+}
+
+//https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=AIzaSyBtpAb_QeWDYxt8wGyU90NWyb2hnst-src
+
+
+var map, heats=[], res=[];
+
+function initMap() {
+	var m = document.getElementById('wiz-map');
+	if (m) {
+		//var c = {lat: 39.8282, lng: -98.5795};
+		var c = {lat: centers["ny-cp"]["lat"], lng:centers["ny-cp"]["lng"]};
+		map = new google.maps.Map(m, {
+			zoom: 4, center: c, mapTypeId: 'roadmap'
+		});
+		heats.length = 0;
+		console.log("HMW","init");
+	}
+	else {
+		console.log("couldn't init map");
+	}
+}
+
+function updateMap(m, d) {
+	alert("TODO: update map!");
+	console.log("HMW","TODO","update map with new data");
+	//heatmap = new google.maps.visualization.HeatmapLayer({data: r,map: map});
+	//heatmap.set('radius', heatmap.get('radius') ? 50 : 50);
+}
+
+function rplcOpt(id,a,h) {
+	var txt = "";
+	for (var i=0; i<a.length; ++i) {
+		txt += "<option value='"+i+"'>"+(h?a[i]:(i+1))+"</option>";
+	}
+	var e = document.getElementById(id);
+	if (e) {
+		var grp = e.childNodes[0];
+		//console.log(e.childNodes[0]);
+		grp.innerHTML = txt;
+	}
+}
+function rplcOptObj(id,a,p) {
+	var txt = "";
+	for (var i in a) {
+		txt += "<option value='"+i+"'>"+(a[i][p])+"</option>";
+	}
+	var e = document.getElementById(id);
+	if (e) {
+		var grp = e.childNodes[0];
+		//console.log(e.childNodes[0]);
+		grp.innerHTML = txt;
+	}
+}
+$(function(){
+	var fn = "starbucks.csv";
+	var r = [], a = [], hdr = [];
+	rplcOptObj("center",centers,"label");
+	$.get(fn, function(d){
+		//alert("got csv size "+d.length);
+		r.length = 0;
+		hdr.length = 0;
+		r = $.csv.toObjects(d);
+		a = $.csv.toArrays(d);
+		hdr = a[0];
+		//console.log(r);
+		$("#use-lbl").change();
+	});
+	$("#use-lbl").change(function(){
+		var use_lbl = document.getElementById("use-lbl").checked;
+		rplcOpt("col-label",hdr,use_lbl);
+		rplcOpt("col-lat",hdr,use_lbl);
+		rplcOpt("col-lng",hdr,use_lbl);
+		rplcOpt("col-wt",hdr,use_lbl);
+	});
+	$("#wiz").submit(function(e){
+		e.preventDefault();
+		if (a.length>0) {
+			var d = [];
+			var lat = $("#col-lat").value(),
+				lng = $("#col-lng").value();
+			console.log("HMW","LAT-col",lat,"LNG-col",lng);
+			for (var i=0; i<a.length; ++i) {
+				
+			}
+			if (map) updateMap(map, []);
+		}
+	});
+});
+/* ]]> */</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtpAb_QeWDYxt8wGyU90NWyb2hnst-src&amp;libraries=visualization&amp;callback=initMap">
+</script>
+</body>
+</html>
