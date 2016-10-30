@@ -246,6 +246,9 @@ form	{position:relative; box-sizing:border-box; position:relative; border:solid 
 @media screen and (min-width: 1024px) {
 }
 </style>
+<style type="text/css">
+#wiz-map	{height:600px; width:100%; max-width:800px; margin:1em auto;}
+</style>
 </head>
 <body>
 <header id="hdr">
@@ -255,51 +258,166 @@ form	{position:relative; box-sizing:border-box; position:relative; border:solid 
 	</ul></nav>
 </header>
 <main id="main">
-	<form id="wiz">
+	<form class="cf" id="wiz">
 		<label><select id="col-label" required="required"><optgroup label="Select column"></optgroup></select><span>Label column</span></label>
-		<label><select id="col-lat" required="required"><optgroup label="Select column"></optgroup></select><span>Latitude column</span></label>
-		<label><select id="col-lng" required="required"><optgroup label="Select column"></optgroup></select><span>Longitude column</span></label>
+		<label class="w50"><select id="col-lat" required="required"><optgroup label="Select column"></optgroup></select><span>Latitude column</span></label>
+		<label class="w50"><select id="col-lng" required="required"><optgroup label="Select column"></optgroup></select><span>Longitude column</span></label>
 		<label><select id="col-wt" required="required"><optgroup label="Select column"></optgroup></select><span>Weight column</span></label>
 		<label><input type="checkbox" id="use-lbl" /><span>I have labeled columns</span></label>
 		<label><select id="center" required="required"><optgroup label="Select location"></optgroup></select><span>Center map at&hellip;</span></label>
+		<label><select id="map-type" required="required"><optgroup label="Select type"></optgroup></select><span>Map type</span></label>
 		<button type="submit" id="upd-map" class="btn btn-primary btn-sub">Update!</button>
 	</form>
 	<div id="wiz-map"></div>
 </main>
 <footer id="ftr"></footer>
 <script type="text/javascript">/* <![CDATA[ */
-var centers = {
-	"ny-cp":{"label":"Central Park","lat":40.7828647,"lng":-73.9675438},
-	"ny-ts":{"label":"Times Square","lat":40.758895,"lng":-73.9873197},
-	"us-dc":{"label":"Washington, DC","lat":38.899265,"lng":-77.154656}
+// Production steps of ECMA-262, Edition 5, 15.4.4.18
+// Reference: http://es5.github.io/#x15.4.4.18
+if (!Array.prototype.forEach) {
+
+  Array.prototype.forEach = function(callback, thisArg) {
+
+    var T, k;
+
+    if (this === null) {
+      throw new TypeError(' this is null or not defined');
+    }
+
+    // 1. Let O be the result of calling toObject() passing the
+    // |this| value as the argument.
+    var O = Object(this);
+
+    // 2. Let lenValue be the result of calling the Get() internal
+    // method of O with the argument "length".
+    // 3. Let len be toUint32(lenValue).
+    var len = O.length >>> 0;
+
+    // 4. If isCallable(callback) is false, throw a TypeError exception. 
+    // See: http://es5.github.com/#x9.11
+    if (typeof callback !== "function") {
+      throw new TypeError(callback + ' is not a function');
+    }
+
+    // 5. If thisArg was supplied, let T be thisArg; else let
+    // T be undefined.
+    if (arguments.length > 1) {
+      T = thisArg;
+    }
+
+    // 6. Let k be 0
+    k = 0;
+
+    // 7. Repeat, while k < len
+    while (k < len) {
+
+      var kValue;
+
+      // a. Let Pk be ToString(k).
+      //    This is implicit for LHS operands of the in operator
+      // b. Let kPresent be the result of calling the HasProperty
+      //    internal method of O with argument Pk.
+      //    This step can be combined with c
+      // c. If kPresent is true, then
+      if (k in O) {
+
+        // i. Let kValue be the result of calling the Get internal
+        // method of O with argument Pk.
+        kValue = O[k];
+
+        // ii. Call the Call internal method of callback with T as
+        // the this value and argument list containing kValue, k, and O.
+        callback.call(T, kValue, k, O);
+      }
+      // d. Increase k by 1.
+      k++;
+    }
+    // 8. return undefined
+  };
 }
+/* ]]> */</script>
+<script type="text/javascript">/* <![CDATA[ */
 
 //https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=AIzaSyBtpAb_QeWDYxt8wGyU90NWyb2hnst-src
 
 
-var map, heats=[], res=[];
+var map=null, mid="wiz-map", heats=[], res=[];
+var zInit = 13;
+var types = {
+	"ROADMAP":{"label":"Road map"},
+	"SATELLITE":{"label":"Satellite"},
+	"HYBRID":{"label":"Hybrid"}
+};
+var centers = {
+	"ny-cp":{"label":"Central Park","lat":40.7828647,"lng":-73.9675438},
+	"ny-ts":{"label":"Times Square","lat":40.758895,"lng":-73.9873197},
+	"us-dc":{"label":"Washington, DC","lat":38.899265,"lng":-77.154656}
+}, cid = "ny-cp";
+
+
 
 function initMap() {
-	var m = document.getElementById('wiz-map');
+	var m = document.getElementById(mid);
 	if (m) {
 		//var c = {lat: 39.8282, lng: -98.5795};
-		var c = {lat: centers["ny-cp"]["lat"], lng:centers["ny-cp"]["lng"]};
+		var c = new google.maps.LatLng(centers[cid]["lat"], centers[cid]["lng"]);
 		map = new google.maps.Map(m, {
-			zoom: 4, center: c, mapTypeId: 'roadmap'
+			zoom: zInit, center: c,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
 		});
-		heats.length = 0;
-		console.log("HMW","init");
+		console.log("HMW","init id="+mid+", c="+cid);//,map);
+		clearHeats(heats);
 	}
 	else {
 		console.log("couldn't init map");
 	}
 }
 
+function clearHeats(d) {
+	var i;
+	if ((i=d.length)) {
+		while (--i>-1) {
+			if (d[i]&&d[i].getMap()) d[i].setMap(null);
+		}
+	}
+	d.length = 0;
+	console.log("heat layers cleared");
+}
+function addHeat(m,d) {
+	//console.log(d);
+	var h = new google.maps.visualization.HeatmapLayer({
+		maxIntensity:1
+	});
+	if (d&&d.length) h.setData(d);//, console.log(h.getData());
+	h.set('radius', 50);
+	heats.push(h);
+	console.log("heat layer added, now "+heats.length+" layer(s)");
+}
+function activateHeat(m,i) {
+	console.log("activating heat layer "+i);
+	try {
+		if (heats&&heats[i]) heats[i].setMap(m?m:null);//, console.log(heats[i]);
+	} catch (e) {
+		console.log("HMW","couldn't activate heat layer "+i,e);
+	}
+	console.log("heat layer "+i+" map",heats[i].getMap());
+}
+
 function updateMap(m, d) {
 	alert("TODO: update map!");
-	console.log("HMW","TODO","update map with new data");
-	//heatmap = new google.maps.visualization.HeatmapLayer({data: r,map: map});
-	//heatmap.set('radius', heatmap.get('radius') ? 50 : 50);
+	console.log("HMW","TODO","update map with layers="+d.length);
+	clearHeats(heats);
+	if (m) {
+		for (var i=0; i<d.length; ++i) {
+			addHeat(m,d[i]);
+			activateHeat(m,i);
+		}
+		console.log("map updated");
+	}
+}
+
+function hasNone(id) {
+	return ["col-wt"].indexOf(id)>-1;
 }
 
 function rplcOpt(id,a,h) {
@@ -310,6 +428,7 @@ function rplcOpt(id,a,h) {
 	var e = document.getElementById(id);
 	if (e) {
 		var grp = e.childNodes[0];
+		if (hasNone(id)) txt = "<option value='-1'>&lt;none&gt;</option>"+txt;
 		//console.log(e.childNodes[0]);
 		grp.innerHTML = txt;
 	}
@@ -330,7 +449,8 @@ $(function(){
 	var fn = "starbucks.csv";
 	var r = [], a = [], hdr = [];
 	rplcOptObj("center",centers,"label");
-	$.get(fn, function(d){
+	rplcOptObj("map-type",types,"label");
+	$.get(fn+"?ts="+(+(new Date())), function(d){
 		//alert("got csv size "+d.length);
 		r.length = 0;
 		hdr.length = 0;
@@ -339,6 +459,7 @@ $(function(){
 		hdr = a[0];
 		//console.log(r);
 		$("#use-lbl").change();
+		//alert("File loaded");
 	});
 	$("#use-lbl").change(function(){
 		var use_lbl = document.getElementById("use-lbl").checked;
@@ -349,16 +470,37 @@ $(function(){
 	});
 	$("#wiz").submit(function(e){
 		e.preventDefault();
-		if (a.length>0) {
+		if (!google) console.log("GAPI not loaded yet!");
+		else if (!google.maps) console.log("GMAPI not loaded yet!");
+		else if (!a.length) alert("Dataset not loaded yet!");
+		else {
 			var d = [];
-			var lat = $("#col-lat").value(),
-				lng = $("#col-lng").value();
-			console.log("HMW","LAT-col",lat,"LNG-col",lng);
-			for (var i=0; i<a.length; ++i) {
-				
+			var lat = $("#col-lat").val(),
+				lng = $("#col-lng").val(),
+				wt = $("#col-wt").val(),
+				c = $("#center").val(),
+				t = $("#map-type").val();
+			//var _lat, _lng, _wt;
+			var i = document.getElementById("use-lbl").checked?1:0;
+			console.log("HMW","LAT-col="+lat,"LNG-col="+lng,"WT-col="+wt,"labeled="+i);
+			for (i; i<a.length; ++i) {
+				d.push(wt>-1?
+					new google.maps.visualization.WeightedLocation({
+						location: new google.maps.LatLng(+a[i][lat], +a[i][lng]),
+						weight: +a[i][wt]
+					}) :
+					new google.maps.LatLng(+a[i][lat], +a[i][lng]));
 			}
-			if (map) updateMap(map, []);
+			res.push(d);
+			if (map) {
+				map.setMapTypeId(t);
+				map.setCenter(new google.maps.LatLng(centers[c]["lat"], centers[c]["lng"]));
+				if (res) updateMap(map, res);
+				//console.log("upd done");
+			}
+			//console.log("else done");
 		}
+		//console.log("sub done");
 	});
 });
 /* ]]> */</script>
