@@ -70,13 +70,21 @@
       // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization">
 
       var map, heatmap, res=[];
+      var new_center = {lat: 39.8282, lng: -98.5795};
 
-      function initMap(r) {
-		  map = new google.maps.Map(document.getElementById('map'), { zoom: 4, center: {lat: 39.8282, lng: -98.5795}, mapTypeId: 'roadmap'});
+//Initialize the map (zoom, center, type)
+/*
+      function initMap
+*/
+//To access any number of arguments use arguments.length
+      function initMap() {
+		  map = new google.maps.Map(document.getElementById('map'), { zoom: 4, center: new_center, mapTypeId: 'roadmap'}); //used to be center: {lat: 39.8282, lng: -98.5795}
 
+      }
+
+      function initHeatObj (r){
         heatmap = new google.maps.visualization.HeatmapLayer({data: r,map: map});
-
-		heatmap.set('radius', heatmap.get('radius') ? 50 : 50);
+        heatmap.set('radius', heatmap.get('radius') ? 50 : 50);
 
       }
 
@@ -93,17 +101,18 @@
       }
 
   function test(){
-	  $(function(){
-		  $.get("zipcode.csv", function(d){
-			  res.length = 0;
-			  var result = $.csv.toObjects(d);
-			  for (var i = 0; i < result.length; i++){
-			  	 var lat = result[i]["LAT"]*1.0;
-			 	 var long = result[i]["LNG"]*1.0;
-				 var wt = 1.0;
-				 res.push({location: new google.maps.LatLng(lat,long), weight: wt});
+    initMap();                                                              //loaded after the google map library is loaded (and after the page loads)
+	  $(function(){                                                               //Defined in JQuery it is the $ function. It is attached to a lot of stuff (functions in JS are also objects)
+		  $.get("zipcode.csv", function(d){                                         //get is member function of $
+			  res.length = 0;                                                         //$.get is a URL function. It gets a url (path), but could be a different website.
+			  var result = $.csv.toObjects(d);                                        //The second parameter is a function to execute when the url is loaded successfully
+			  for (var i = 0; i < result.length; i++){                                //In this case, we are defining this function inline as an anonymous function
+			  	 var lat = result[i]["LAT"]*1.0;                                      //
+			 	 var long = result[i]["LNG"]*1.0;                                       //
+				 var wt = 1.0;                                                          //
+				 res.push({location: new google.maps.LatLng(lat,long), weight: wt});    //
 			 }
-			 initMap(res);
+       initHeatObj(res);                                                            //
 		  });
 	  });
   }
