@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>JFK-SRC 2015 Merge</title>
+	<script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+	<script src="javascripts/jquery.csv.min.js"></script>
+	
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+	  
+      #map {
+        height: 100%;
+      }
+	  /* #function = id > class 
+	  4 levels : inline style  > name(id) > class > element name(i.e. html,div, body etc..)  */
+      #floating-panel {
+        position: absolute;
+        top: 25px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+	  /* .function = class */
+      #floating-panel {
+        background-color: #fff;
+        border: 1px solid #999;
+        left: 25%;
+        padding: 5px;
+        position: absolute;
+        top: 25px;
+        z-index: 5;
+      }
+    </style>
+  </head>
+
+  <body>
+	<!-- 
+	style="background: blue;" inline 
+	<button onclick="changeGradient()">Change gradient</button>
+    <button onclick="changeOpacity()">Change opacity</button>
+	-->
+
+    <div id="floating-panel">
+		<button onclick="toggleHeatmap()">Toggle Heatmap</button>
+	  <select onchange="changeScale(this)">
+		  <option value="0">Choose Scale</option>
+		  <option value="1">1</option>
+		  <option value="2">2</option>
+		  <option value="3">3</option>
+		  <option value="4">4</option>
+		  <option value="5">5</option>
+		  <option value="6">5</option>
+		  <option value="7">7</option>
+		  <option value="8">8</option>
+	  </select>
+	  
+    </div>
+	
+    <div id="map"></div>
+	
+    <script>
+
+      var map, heatmap3, res3=[], scale=[0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8], radius = 0.5, zoomLevel = 4, opt=0;
+
+      function initMap() {
+		  radius = radius*(1<<zoomLevel);
+		  
+		  map = new google.maps.Map(document.getElementById('map'), 
+		  { zoom: zoomLevel, center: {lat: 39.8282, lng: -98.5795}, mapTypeId: 'roadmap'});
+		  
+		  merge_csv("zipcode.csv", "Flight_2015.csv");
+		  
+		  heatmap3 = new google.maps.visualization.HeatmapLayer({data: res3,map: map});
+		  
+		  heatmap3.set('radius', heatmap3.get('radius') ? radius*scale[opt] : radius*scale[opt]);
+		  
+		  google.maps.event.addListener(map, 'zoom_changed', function() {
+		      zoomLevel = map.getZoom();
+			  // each zoom level changes zoom by a factor of 2
+			  radius = 0.5;
+			  radius = radius*(1<<zoomLevel);
+			  heatmap3.set('radius', heatmap3.get('radius') ? radius*scale[opt] : radius*scale[opt]);
+		  });
+		  
+		  
+      }
+	  
+      function toggleHeatmap() {
+		  heatmap3.setMap(heatmap3.getMap() ? null : map);
+      }
+	  
+      function changeScale(sel) {
+		  // | 0 does bitwise or to coerce value to become integer
+		  opt = sel.options[sel.selectedIndex].value;
+		  heatmap3.set('radius', heatmap3.get('radius') ? radius*scale[opt]: radius*scale[opt]);
+      }
+	  
+  	  function get_data(fileName){
+ 	 	 $(function(){
+ 		 	 $.get(fileName, function(d){
+ 				 var result = $.csv.toObjects(d);
+ 				 for (var i = 0; i < result.length; i++){
+ 			  	 	var lat = result[i]["LAT"]*1.0;
+ 			 	 	var long = result[i]["LNG"]*1.0;
+ 				 	var wt = 1.0;
+ 				 	res3.push({location: new google.maps.LatLng(lat,long), weight: 1});
+ 				 }
+ 		 	 });
+ 	  	  });
+ 	   }
+	   
+	   function merge_csv(){
+		   for(var i = 0; i < arguments.length; i++){
+			   get_data(arguments[i]);
+		   }
+	   }
+	  
+    </script>
+	  
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtpAb_QeWDYxt8wGyU90NWyb2hnst-src&libraries=visualization&callback=initMap">
+    </script>
+
+  </body>
+</html>
+
