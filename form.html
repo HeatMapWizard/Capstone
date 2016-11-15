@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <title>Heat Map Wizz&auml;rd</title>
+<script type="text/javascript" src="javascripts/polyfill.js"></script>
+<script type="text/javascript" src="javascripts/md5.js"></script>
 <script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
 <script src="javascripts/jquery.csv.min.js" type="text/javascript"></script>
 <style type="text/css">
@@ -259,11 +261,11 @@ form	{position:relative; box-sizing:border-box; position:relative; border:solid 
 </header>
 <main id="main">
 	<form class="cf" id="wiz">
-		<label><select id="col-label" required="required"><optgroup label="Select column"></optgroup></select><span>Label column</span></label>
+		<label><select id="fn-choose" required="required"><optgroup label="Select file"></optgroup></select><span>Choose file</span></label>
+		<label><input type="checkbox" id="use-lbl" /><span>I have labeled columns</span></label>
 		<label class="w50"><select id="col-lat" required="required"><optgroup label="Select column"></optgroup></select><span>Latitude column</span></label>
 		<label class="w50"><select id="col-lng" required="required"><optgroup label="Select column"></optgroup></select><span>Longitude column</span></label>
 		<label><select id="col-wt" required="required"><optgroup label="Select column"></optgroup></select><span>Weight column</span></label>
-		<label><input type="checkbox" id="use-lbl" /><span>I have labeled columns</span></label>
 		<label><select id="center" required="required"><optgroup label="Select location"></optgroup></select><span>Center map at&hellip;</span></label>
 		<label><select id="map-type" required="required"><optgroup label="Select type"></optgroup></select><span>Map type</span></label>
 		<button type="submit" id="upd-map" class="btn btn-primary btn-sub">Update!</button>
@@ -272,76 +274,11 @@ form	{position:relative; box-sizing:border-box; position:relative; border:solid 
 </main>
 <footer id="ftr"></footer>
 <script type="text/javascript">/* <![CDATA[ */
-// Production steps of ECMA-262, Edition 5, 15.4.4.18
-// Reference: http://es5.github.io/#x15.4.4.18
-if (!Array.prototype.forEach) {
-
-  Array.prototype.forEach = function(callback, thisArg) {
-
-    var T, k;
-
-    if (this === null) {
-      throw new TypeError(' this is null or not defined');
-    }
-
-    // 1. Let O be the result of calling toObject() passing the
-    // |this| value as the argument.
-    var O = Object(this);
-
-    // 2. Let lenValue be the result of calling the Get() internal
-    // method of O with the argument "length".
-    // 3. Let len be toUint32(lenValue).
-    var len = O.length >>> 0;
-
-    // 4. If isCallable(callback) is false, throw a TypeError exception. 
-    // See: http://es5.github.com/#x9.11
-    if (typeof callback !== "function") {
-      throw new TypeError(callback + ' is not a function');
-    }
-
-    // 5. If thisArg was supplied, let T be thisArg; else let
-    // T be undefined.
-    if (arguments.length > 1) {
-      T = thisArg;
-    }
-
-    // 6. Let k be 0
-    k = 0;
-
-    // 7. Repeat, while k < len
-    while (k < len) {
-
-      var kValue;
-
-      // a. Let Pk be ToString(k).
-      //    This is implicit for LHS operands of the in operator
-      // b. Let kPresent be the result of calling the HasProperty
-      //    internal method of O with argument Pk.
-      //    This step can be combined with c
-      // c. If kPresent is true, then
-      if (k in O) {
-
-        // i. Let kValue be the result of calling the Get internal
-        // method of O with argument Pk.
-        kValue = O[k];
-
-        // ii. Call the Call internal method of callback with T as
-        // the this value and argument list containing kValue, k, and O.
-        callback.call(T, kValue, k, O);
-      }
-      // d. Increase k by 1.
-      k++;
-    }
-    // 8. return undefined
-  };
-}
-/* ]]> */</script>
-<script type="text/javascript">/* <![CDATA[ */
 
 //https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=AIzaSyBtpAb_QeWDYxt8wGyU90NWyb2hnst-src
 
 
-var map=null, mid="wiz-map", heats=[], res=[];
+var map=null, mid="wiz-map", heats={}, res={};
 var zInit = 13;
 var types = {
 	"ROADMAP":{"label":"Road map"},
@@ -361,12 +298,13 @@ function initMap() {
 	if (m) {
 		//var c = {lat: 39.8282, lng: -98.5795};
 		var c = new google.maps.LatLng(centers[cid]["lat"], centers[cid]["lng"]);
-		map = new google.maps.Map(m, {
+		if (!(map instanceof google.maps.Map)) map = new google.maps.Map(m, {
 			zoom: zInit, center: c,
 			mapTypeId: google.maps.MapTypeId.ROADMAP
 		});
 		console.log("HMW","init id="+mid+", c="+cid);//,map);
 		clearHeats(heats);
+		map.setCenter(c);
 	}
 	else {
 		console.log("couldn't init map");
@@ -383,14 +321,14 @@ function clearHeats(d) {
 	d.length = 0;
 	console.log("heat layers cleared");
 }
-function addHeat(m,d) {
+function addHeat(m,i,d) {
 	//console.log(d);
 	var h = new google.maps.visualization.HeatmapLayer({
 		maxIntensity:1
 	});
-	if (d&&d.length) h.setData(d);//, console.log(h.getData());
-	h.set('radius', 50);
-	heats.push(h);
+	if (d&&d["coordinates"].length) h.setData(d["coordinates"]), console.log(d["coordinates"]);
+	h.set('radius', 25);
+	heats[i] = (h);
 	console.log("heat layer added, now "+heats.length+" layer(s)");
 }
 function activateHeat(m,i) {
@@ -408,8 +346,9 @@ function updateMap(m, d) {
 	console.log("HMW","TODO","update map with layers="+d.length);
 	clearHeats(heats);
 	if (m) {
-		for (var i=0; i<d.length; ++i) {
-			addHeat(m,d[i]);
+		for (var i in d) {
+			console.log("update",i);
+			addHeat(m,i,d[i]);
 			activateHeat(m,i);
 		}
 		console.log("map updated");
@@ -445,28 +384,50 @@ function rplcOptObj(id,a,p) {
 		grp.innerHTML = txt;
 	}
 }
+
+var testFiles = {
+	"starbucks":{"label":"Starbucks","file":"starbucks.csv"},
+	"jfk":{"label":"JFK flights","file":"Flight_2015.csv"},
+	"zip":{"label":"zip codes","file":"zipcode.csv"}
+};
+
 $(function(){
-	var fn = "starbucks.csv";
-	var r = [], a = [], hdr = [];
+	rplcOptObj("fn-choose",testFiles,"label");
 	rplcOptObj("center",centers,"label");
 	rplcOptObj("map-type",types,"label");
-	$.get(fn+"?ts="+(+(new Date())), function(d){
-		//alert("got csv size "+d.length);
-		r.length = 0;
-		hdr.length = 0;
-		r = $.csv.toObjects(d);
-		a = $.csv.toArrays(d);
-		hdr = a[0];
-		//console.log(r);
-		$("#use-lbl").change();
-		//alert("File loaded");
+	var r = [], a = [], hdr = [];
+	var _h = null;
+	function _load_it(fn) {
+		$.get(fn+"?ts="+(+(new Date())), function(d){
+			//alert("got csv size "+d.length);
+			_h = md5(d);
+			if (!res[_h]) {
+				r.length = 0;
+				hdr.length = 0;
+				r = $.csv.toObjects(d);
+				a = $.csv.toArrays(d);
+				hdr = a[0];
+				res[_h] = {
+					"header":hdr,
+					"converted":a,
+					"associative":r
+				};
+				//console.log(r);
+			}
+			$("#use-lbl").change();
+			//alert("File loaded");
+		});
+	}
+	$("#fn-choose").change(function(){
+		var f = $(this).val();
+		_load_it(testFiles[f]["file"]);
 	});
 	$("#use-lbl").change(function(){
 		var use_lbl = document.getElementById("use-lbl").checked;
-		rplcOpt("col-label",hdr,use_lbl);
-		rplcOpt("col-lat",hdr,use_lbl);
-		rplcOpt("col-lng",hdr,use_lbl);
-		rplcOpt("col-wt",hdr,use_lbl);
+		rplcOpt("col-label",res[_h]["header"],use_lbl);
+		rplcOpt("col-lat",res[_h]["header"],use_lbl);
+		rplcOpt("col-lng",res[_h]["header"],use_lbl);
+		rplcOpt("col-wt",res[_h]["header"],use_lbl);
 	});
 	$("#wiz").submit(function(e){
 		e.preventDefault();
@@ -484,24 +445,25 @@ $(function(){
 			var i = document.getElementById("use-lbl").checked?1:0;
 			console.log("HMW","LAT-col="+lat,"LNG-col="+lng,"WT-col="+wt,"labeled="+i);
 			for (i; i<a.length; ++i) {
-				d.push(wt>-1?
-					new google.maps.visualization.WeightedLocation({
+				d.push(
+					{
 						location: new google.maps.LatLng(+a[i][lat], +a[i][lng]),
-						weight: +a[i][wt]
-					}) :
-					new google.maps.LatLng(+a[i][lat], +a[i][lng]));
+						weight: wt>-1?+a[i][wt]:1.0
+					}
+				);
 			}
-			res.push(d);
+			res[_h]["coordinates"] = (d);
 			if (map) {
 				map.setMapTypeId(t);
 				map.setCenter(new google.maps.LatLng(centers[c]["lat"], centers[c]["lng"]));
-				if (res) updateMap(map, res);
+				if (res[_h]) updateMap(map, res);
 				//console.log("upd done");
 			}
 			//console.log("else done");
 		}
 		//console.log("sub done");
 	});
+	$("#fn-choose").change();
 });
 /* ]]> */</script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBtpAb_QeWDYxt8wGyU90NWyb2hnst-src&amp;libraries=visualization&amp;callback=initMap">
