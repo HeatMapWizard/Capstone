@@ -291,6 +291,19 @@ var centers = {
 	"us-dc":{"label":"Washington, DC","lat":38.899265,"lng":-77.154656}
 }, cid = "ny-cp";
 
+var scales = [];
+(function(s){
+	function _sc(n) {
+		return {
+			"label":n,
+			"val":(n/10)
+		}
+	}
+	for (var i=0; i<10; ++i)
+		s[i] = _sc(i+1);
+	console.log(s);
+})(scales);
+
 
 
 function initMap() {
@@ -298,10 +311,19 @@ function initMap() {
 	if (m) {
 		//var c = {lat: 39.8282, lng: -98.5795};
 		var c = new google.maps.LatLng(centers[cid]["lat"], centers[cid]["lng"]);
-		if (!(map instanceof google.maps.Map)) map = new google.maps.Map(m, {
-			zoom: zInit, center: c,
-			mapTypeId: google.maps.MapTypeId.ROADMAP
-		});
+		if (!(map instanceof google.maps.Map)) {
+			map = new google.maps.Map(m, {
+				zoom: zInit, center: c,
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			});
+			google.maps.event.addListener(map, 'zoom_changed', function() {
+				var zoomLevel = map.getZoom()-1; if (zoomLevel<0) zoomLevel = 0;
+				//console.log(zoomLevel);
+				// each zoom level changes zoom by a factor of 2
+				var radius = (1<<zoomLevel)/25;
+				for (var k in heats) if (heats[k].set) heats[k].set('radius', radius*scales[0].val);
+			});
+		}
 		console.log("HMW","init id="+mid+", c="+cid);//,map);
 		clearHeats(heats);
 		map.setCenter(c);
@@ -342,7 +364,7 @@ function activateHeat(m,i) {
 }
 
 function updateMap(m, d) {
-	alert("TODO: update map!");
+	alert("Updating map!");
 	console.log("HMW","TODO","update map with layers="+d.length);
 	clearHeats(heats);
 	if (m) {
