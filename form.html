@@ -348,7 +348,7 @@ function addHeat(m,i,d) {
 	var h = new google.maps.visualization.HeatmapLayer({
 		maxIntensity:1
 	});
-	if (d&&d["coordinates"].length) h.setData(d["coordinates"]), console.log(d["coordinates"]);
+	if (d&&d["coordinates"]) h.setData(d["coordinates"]), console.log(d["coordinates"]);
 	h.set('radius', 25);
 	heats[i] = (h);
 	console.log("heat layer added, now "+heats.length+" layer(s)");
@@ -410,7 +410,8 @@ function rplcOptObj(id,a,p) {
 var testFiles = {
 	"starbucks":{"label":"Starbucks","file":"starbucks.csv"},
 	"jfk":{"label":"JFK flights","file":"Flight_2015.csv"},
-	"zip":{"label":"zip codes","file":"zipcode.csv"}
+	"schools":{"label":"Schools","file":"modified_data.csv"},
+	"zip":{"label":"Zip codes","file":"zipcode.csv"}
 };
 
 $(function(){
