@@ -267,7 +267,7 @@ form	{position:relative; box-sizing:border-box; position:relative; border:solid 
 		<label class="w50"><select id="col-lng" required="required"><optgroup label="Select column"></optgroup></select><span>Longitude column</span></label>
 		<label><select id="col-wt" required="required"><optgroup label="Select column"></optgroup></select><span>Weight column</span></label>
 		<label><select id="center" required="required"><optgroup label="Select location"></optgroup></select><span>Center map at&hellip;</span></label>
-		<label><select id="map-type" required="required"><optgroup label="Select type"></optgroup></select><span>Map type</span></label>
+		<!-- label><select id="map-type" required="required"><optgroup label="Select type"></optgroup></select><span>Map type</span></label -->
 		<button type="submit" id="upd-map" class="btn btn-primary btn-sub">Update!</button>
 	</form>
 	<div id="wiz-map"></div>
@@ -417,7 +417,7 @@ var testFiles = {
 $(function(){
 	rplcOptObj("fn-choose",testFiles,"label");
 	rplcOptObj("center",centers,"label");
-	rplcOptObj("map-type",types,"label");
+	//rplcOptObj("map-type",types,"label");
 	var r = [], a = [], hdr = [];
 	var _h = null;
 	function _load_it(fn) {
