@@ -104,7 +104,7 @@
 				 for (var i = 0; i < result.length; i++){
 			  	 	var lat = result[i]["LATITUDE"]*1.0;
 			 	 	var long = result[i]["LONGITUDE"]*1.0;
-				 	var wt = result[i]["SAT_AVG"]*1.0;
+				 	var wt = result[i]["SATVR75"]*1.0;
 				 	res.push({location: new google.maps.LatLng(lat,long), weight: wt});
 				 }
 				 initMap(res);
